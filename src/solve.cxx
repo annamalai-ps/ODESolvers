@@ -1036,7 +1036,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
 
     const auto explicit_b_hat = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
       i = i - 1;
-      const double b_hat = {0,(1-Gamma-delta),delta,Gamma};
+      const double b_hat[4] = {0,(1-Gamma-delta),delta,Gamma};
       return b_hat[i]; };
 
     const auto implicit_c = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
@@ -1045,7 +1045,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
 
     const auto explicit_c_hat = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
       i = i - 1;
-      const double c_hat = {0,Gamma,((1+Gamma)/2),1};
+      const double c_hat[4] = {0,Gamma,((1+Gamma)/2),1};
       return c_hat[i]; };
 
 
@@ -1055,9 +1055,9 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k1_hat = rhs.copy();
 
-    float alpha = dt*implicit_butcher_table_a(1,1);
+    float alpha = dt*implicit_butcher_table_a(1,1,Gamma,delta,eta,mu);
     statecomp_t beta_product(cctkGH);
-    statecomp_t::lincomb(beta_product,0,make_array(explicit_butcher_table_a_hat(2,1)),make_array(&k1_hat));
+    statecomp_t::lincomb(beta_product,0,make_array(explicit_butcher_table_a_hat(2,1,Gamma,delta,eta,mu)),make_array(&k1_hat));
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
@@ -1074,12 +1074,12 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k2_hat = rhs.copy();
 
-    float alpha = dt*implicit_butcher_table_a(2,2);
+    float alpha = dt*implicit_butcher_table_a(2,2,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
     make_array(
-      implicit_butcher_table_a(2,1),
-      explicit_butcher_table_a_hat(3,1),
-      explicit_butcher_table_a_hat(3,2)),
+      implicit_butcher_table_a(2,1,Gamma,delta,eta,mu),
+      explicit_butcher_table_a_hat(3,1,Gamma,delta,eta,mu),
+      explicit_butcher_table_a_hat(3,2,Gamma,delta,eta,mu)),
     make_array(&k1,&k1_hat,&k2_hat));
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
@@ -1096,14 +1096,14 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k3_hat = rhs.copy();
 
-    float alpha = dt*implicit_butcher_table_a(3,3);
+    float alpha = dt*implicit_butcher_table_a(3,3,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
     make_array(
-      implicit_butcher_table_a(3,1),
-      implicit_butcher_table_a(3,2),
-      explicit_butcher_table_a_hat(4,1),
-      explicit_butcher_table_a_hat(4,2)
-      explicit_butcher_table_a_hat(4,3)),
+      implicit_butcher_table_a(3,1,Gamma,delta,eta,mu),
+      implicit_butcher_table_a(3,2,Gamma,delta,eta,mu),
+      explicit_butcher_table_a_hat(4,1,Gamma,delta,eta,mu),
+      explicit_butcher_table_a_hat(4,2,Gamma,delta,eta,mu)
+      explicit_butcher_table_a_hat(4,3,Gamma,delta,eta,mu)),
     make_array(&k1,&k1_hat,&k2_hat));
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
@@ -1124,13 +1124,13 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     statecomp_t ynp1_product(cctk_GH);
     statecomp_t::lincomb(ynp1_product,0,
       make_array(
-        implicit_b(1)
-        implicit_b(2)
-        implicit_b(3)
-        explicit_b_hat(1)
-        explicit_b_hat(2)
-        explicit_b_hat(3)
-        explicit_b_hat(4)
+        implicit_b(1,Gamma,delta,eta,mu)
+        implicit_b(2,Gamma,delta,eta,mu)
+        implicit_b(3,Gamma,delta,eta,mu)
+        explicit_b_hat(1,Gamma,delta,eta,mu)
+        explicit_b_hat(2,Gamma,delta,eta,mu)
+        explicit_b_hat(3,Gamma,delta,eta,mu)
+        explicit_b_hat(4,Gamma,delta,eta,mu)
       ),
       make_array(&k1,&k2,&k3,&k1_hat,&k2_hat,&k3_hat,&k4_hat));
     
