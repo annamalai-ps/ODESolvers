@@ -1016,7 +1016,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto mu = 0.5529291479;
 
     //const auto R = [](T x, T y) { return x / y; };
-    const auto implicit_butcher_table_a = [](T i,T j) {
+    const auto implicit_butcher_table_a = [](i, j) {
       const auto a_imp[4][4] = {{0,0,0,0},
                            {0,Gamma,0,0},
                            {0,(1 - Gamma)/2,Gamma,0},
