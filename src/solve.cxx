@@ -1122,7 +1122,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k4_hat = rhs.copy();
     
-    statecomp_t ynp1_product(cctk_GH);
+    statecomp_t ynp1_product(cctkGH);
     statecomp_t::lincomb(ynp1_product,0,
       make_array(
         implicit_b(1,Gamma,delta,eta,mu),
