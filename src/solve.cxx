@@ -1014,39 +1014,39 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto delta = -0.644373171;
     const auto eta = 0.3966543747;
     const auto mu = 0.5529291479;
-
+    //const auto R = [](T x, T y) { return x / y; };
     const auto implicit_butcher_table_a[](T i,T j) {
-      float a_imp[4][4] = {{0,0,0,0},
+      const auto a_imp[4][4] = {{0,0,0,0},
                            {0,Gamma,0,0},
                            {0,(1 - Gamma)/2,Gamma,0},
                            {0,(1-Gamma-delta),delta,Gamma}};
       return a_imp[i][j]; };
 
     const auto explicit_butcher_table_a_hat[](T i,T j) {
-      int i = i-1;
-      int j = j-1;
-      float a_exp[4][4] = {{0,0,0,0},
+      const int i = i-1;
+      const int j = j-1;
+      const auto a_exp[4][4] = {{0,0,0,0},
                            {Gamma,0,0,0},
                            {((1 + Gamma)/2) - eta,eta,0,0},
                            {(1-2*mu),mu,mu,0}};
       return a_exp[i][j]; };
 
     const auto implicit_b[](T i) {
-      float b[4] = {0,(1-Gamma-delta),delta,Gamma};
+      const auto b[4] = {0,(1-Gamma-delta),delta,Gamma};
       return b[i]; };
 
     const auto explicit_b_hat[](T i) {
-      int i = i - 1;
-      float b_hat = {0,(1-Gamma-delta),delta,Gamma};
+      const int i = i - 1;
+      const auto b_hat = {0,(1-Gamma-delta),delta,Gamma};
       return b_hat[i]; };
 
     const auto implicit_c[](T i) {
-      float c[4] = {0,Gamma,((1+Gamma)/2),1};
+      const auto c[4] = {0,Gamma,((1+Gamma)/2),1};
       return c[i]; };
 
     const auto explicit_c_hat[](T i) {
-      int i = i - 1;
-      float c_hat = {0,Gamma,((1+Gamma)/2),1};
+      const int i = i - 1;
+      const auto c_hat = {0,Gamma,((1+Gamma)/2),1};
       return c_hat[i]; };
 
 
