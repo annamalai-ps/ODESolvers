@@ -1098,13 +1098,14 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
 
     alpha = dt*implicit_butcher_table_a(3,3,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
-    make_array(
-      implicit_butcher_table_a(3,1,Gamma,delta,eta,mu),
-      implicit_butcher_table_a(3,2,Gamma,delta,eta,mu),
-      explicit_butcher_table_a_hat(4,1,Gamma,delta,eta,mu),
-      explicit_butcher_table_a_hat(4,2,Gamma,delta,eta,mu),
-      explicit_butcher_table_a_hat(4,3,Gamma,delta,eta,mu)),
-    make_array(&k1,&k1_hat,&k2_hat));
+      make_array(
+        implicit_butcher_table_a(3,1,Gamma,delta,eta,mu),
+        implicit_butcher_table_a(3,2,Gamma,delta,eta,mu),
+        explicit_butcher_table_a_hat(4,1,Gamma,delta,eta,mu),
+        explicit_butcher_table_a_hat(4,2,Gamma,delta,eta,mu),
+        explicit_butcher_table_a_hat(4,3,Gamma,delta,eta,mu)
+      ),
+    make_array(&k1,&k2,&k1_hat,&k2_hat,&k3_hat));
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
