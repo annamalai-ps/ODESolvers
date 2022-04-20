@@ -1015,14 +1015,14 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto eta = 0.3966543747;
     const auto mu = 0.5529291479;
 
-    const auto implicit_butcher_table_a = [](T i,T j, T Gamma, T delta, T eta, T mu) {
+    const auto implicit_butcher_table_a = [](int i,int j, T Gamma, T delta, T eta, T mu) {
       const auto a_imp[4][4] = {{0,0,0,0},
                            {0,Gamma,0,0},
                            {0,(1 - Gamma)/2,Gamma,0},
                            {0,(1-Gamma-delta),delta,Gamma}};
       return a_imp[i][j]; };
 
-    const auto explicit_butcher_table_a_hat = [](T i,T j, T Gamma, T delta, T eta, T mu) {
+    const auto explicit_butcher_table_a_hat = [](int i,int j, T Gamma, T delta, T eta, T mu) {
       const int i = i-1;
       const int j = j-1;
       const auto a_exp[4][4] = {{0,0,0,0},
