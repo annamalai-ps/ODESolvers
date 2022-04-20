@@ -1008,7 +1008,6 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     //                   b_hat(4)*k4_hat )
 
 
-    typedef CCTK_REAL T;
     // Define butcher table data:
     const auto Gamma = 0.4358665215;
     const auto delta = -0.644373171;
@@ -1016,7 +1015,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto mu = 0.5529291479;
 
     const auto implicit_butcher_table_a = [](int i,int j, const auto Gamma, const auto delta, const auto eta, const auto mu) {
-      const auto a_imp[4][4] = {{0,0,0,0},
+      const double a_imp[4][4] = {{0,0,0,0},
                            {0,Gamma,0,0},
                            {0,(1 - Gamma)/2,Gamma,0},
                            {0,(1-Gamma-delta),delta,Gamma}};
@@ -1025,28 +1024,28 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto explicit_butcher_table_a_hat = [](int i,int j, const auto Gamma, const auto delta, const auto eta, const auto mu) {
       i = i-1;
       j = j-1;
-      const auto a_exp[4][4] = {{0,0,0,0},
+      const double a_exp[4][4] = {{0,0,0,0},
                            {Gamma,0,0,0},
                            {((1 + Gamma)/2) - eta,eta,0,0},
                            {(1-2*mu),mu,mu,0}};
       return a_exp[i][j]; };
 
-    const auto implicit_b = [](T i, T Gamma, T delta, T eta, T mu) {
-      const auto b[4] = {0,(1-Gamma-delta),delta,Gamma};
+    const auto implicit_b = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
+      const double b[4] = {0,(1-Gamma-delta),delta,Gamma};
       return b[i]; };
 
-    const auto explicit_b_hat = [](T i, T Gamma, T delta, T eta, T mu) {
-      const int i = i - 1;
-      const auto b_hat = {0,(1-Gamma-delta),delta,Gamma};
+    const auto explicit_b_hat = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
+      i = i - 1;
+      const double b_hat = {0,(1-Gamma-delta),delta,Gamma};
       return b_hat[i]; };
 
-    const auto implicit_c = [](T i, T Gamma, T delta, T eta, T mu) {
-      const auto c[4] = {0,Gamma,((1+Gamma)/2),1};
+    const auto implicit_c = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
+      const double c[4] = {0,Gamma,((1+Gamma)/2),1};
       return c[i]; };
 
-    const auto explicit_c_hat = [](T i, T Gamma, T delta, T eta, T mu) {
-      const int i = i - 1;
-      const auto c_hat = {0,Gamma,((1+Gamma)/2),1};
+    const auto explicit_c_hat = [](int i, const auto Gamma, const auto delta, const auto eta, const auto mu) {
+      i = i - 1;
+      const double c_hat = {0,Gamma,((1+Gamma)/2),1};
       return c_hat[i]; };
 
 
