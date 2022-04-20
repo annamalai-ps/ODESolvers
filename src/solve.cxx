@@ -1074,7 +1074,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k2_hat = rhs.copy();
 
-    float alpha = dt*implicit_butcher_table_a(2,2,Gamma,delta,eta,mu);
+    alpha = dt*implicit_butcher_table_a(2,2,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
     make_array(
       implicit_butcher_table_a(2,1,Gamma,delta,eta,mu),
@@ -1084,7 +1084,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
-    const auto beta = var.copy();
+    beta = var.copy();
     *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = alpha;
     CallScheduleGroup(cctkGH, "ODESolvers_ImplicitStep");
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
@@ -1096,7 +1096,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k3_hat = rhs.copy();
 
-    float alpha = dt*implicit_butcher_table_a(3,3,Gamma,delta,eta,mu);
+    alpha = dt*implicit_butcher_table_a(3,3,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
     make_array(
       implicit_butcher_table_a(3,1,Gamma,delta,eta,mu),
@@ -1108,7 +1108,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
-    const auto beta = var.copy();
+    beta = var.copy();
     *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = alpha;
     CallScheduleGroup(cctkGH, "ODESolvers_ImplicitStep");
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
