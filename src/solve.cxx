@@ -113,7 +113,7 @@ void statecomp_t::check_valid(const function<string()> &why) const {
         const auto &groupdata = *leveldata.groupdata.at(groupid);
         for (int vi = 0; vi < groupdata.numvars; ++vi) {
           const int tl = 0;
-          CarpetX::check_valid(cctkGH, groupdata, vi, tl, why);
+          CarpetX::check_valid(groupdata, vi, tl, nan_handling_t::forbid_nans,why);
         }
       });
     }
