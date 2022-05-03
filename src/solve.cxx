@@ -881,7 +881,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     if (verbose)
       CCTK_VINFO("Calculating RHS #1 at t=%g", double(cctkGH->cctk_time));
     CallScheduleGroup(cctkGH, "ODESolvers_RHS");
-    const auto k1 = rhs.copy(); //rhs???
+    const auto k1 = rhs.copy(); 
 
     *const_cast<CCTK_REAL *>(&cctkGH->cctk_time) = old_time + dt / 2;
     statecomp_t::lincomb(var, 1, make_array(dt / 2), make_array(&rhs));
@@ -1059,8 +1059,8 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
 
     double alpha = dt*implicit_butcher_table_a(1,1,Gamma,delta,eta,mu);
     statecomp_t beta_product(cctkGH);
-    statecomp_t::lincomb(beta_product,0.0,explicit_butcher_table_a_hat(2,1,Gamma,delta,eta,mu),&k1_hat);
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
+    beta_product = var.copy(); // copy dummy data into new state vector since lincomb requires new state vector data shape
+    statecomp_t::lincomb(beta_product,0,make_array(explicit_butcher_table_a_hat(2,1,Gamma,delta,eta,mu)),make_array(&k1_hat));
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
@@ -1072,8 +1072,8 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto y1_var = var.copy();
     //compute g(y1) -> k1:
     statecomp_t k1(cctkGH);
+    k1 = var.copy(); // copy dummy data into new state vector
     statecomp_t::lincomb(k1,0,make_array(1.0/alpha,-1.0/alpha),make_array(&y1_var,&beta));
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     //-----------------Stage 2---------------------
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k2_hat = rhs.copy();
@@ -1085,7 +1085,6 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
       explicit_butcher_table_a_hat(3,1,Gamma,delta,eta,mu),
       explicit_butcher_table_a_hat(3,2,Gamma,delta,eta,mu)),
     make_array(&k1,&k1_hat,&k2_hat));
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
@@ -1096,8 +1095,8 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto y2_var = var.copy(); 
     //compute g(y2) -> k2:
     statecomp_t k2(cctkGH);
+    k2 = var.copy(); // copy dummy data into new state vector
     statecomp_t::lincomb(k2,0,make_array(1.0/alpha,-1.0/alpha),make_array(&y2_var,&beta));
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     //-----------------Stage 3---------------------
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k3_hat = rhs.copy();
@@ -1112,7 +1111,6 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
         explicit_butcher_table_a_hat(4,3,Gamma,delta,eta,mu)
       ),
     make_array(&k1,&k2,&k1_hat,&k2_hat,&k3_hat));
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var, &beta_product));     // here 'var' = beta
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
@@ -1123,13 +1121,14 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     const auto y3_var = var.copy();
     //compute g(y3) -> k3:
     statecomp_t k3(cctkGH);
+    k3 = var.copy(); // copy dummy data into new state vector
     statecomp_t::lincomb(k3,0,make_array(1.0/alpha,-1.0/alpha),make_array(&y3_var,&beta));
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     //-----------Calculate new state vector-------------
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k4_hat = rhs.copy();
     
     statecomp_t ynp1_product(cctkGH);
+    ynp1_product = var.copy(); // copy dummy data into new state vector
     statecomp_t::lincomb(ynp1_product,0,
       make_array(
         implicit_b(1,Gamma,delta,eta,mu),
@@ -1141,7 +1140,6 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
         explicit_b_hat(4,Gamma,delta,eta,mu)
       ),
       make_array(&k1,&k2,&k3,&k1_hat,&k2_hat,&k3_hat,&k4_hat));
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var,&ynp1_product));
     
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
