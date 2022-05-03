@@ -1057,7 +1057,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k1_hat = rhs.copy();
 
-    float alpha = dt*implicit_butcher_table_a(1,1,Gamma,delta,eta,mu);
+    double alpha = dt*implicit_butcher_table_a(1,1,Gamma,delta,eta,mu);
     statecomp_t beta_product(cctkGH);
     statecomp_t::lincomb(beta_product,0,make_array(explicit_butcher_table_a_hat(2,1,Gamma,delta,eta,mu)),make_array(&k1_hat));
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
