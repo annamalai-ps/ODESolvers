@@ -912,7 +912,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     statecomp_t::lincomb(var, 0, make_array(1.0, dt, dt),
                          make_array(&y0, &k2, &kprime2));
 
-  } else if (CCTK_EQUALS(method, "IMEX122")) {
+  } else if (CCTK_EQUALS(method, "IMEX_122")) {
     // code structure forked from "RK2"
     
     // function 'f' -> non-stiff part
