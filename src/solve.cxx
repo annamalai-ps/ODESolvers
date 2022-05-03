@@ -1011,10 +1011,10 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
 
 
     // Define butcher table data:
-    const auto Gamma = 0.4358665215;
-    const auto delta = -0.644373171;
-    const auto eta = 0.3966543747;
-    const auto mu = 0.5529291479;
+    const double Gamma = 0.4358665215;
+    const double delta = -0.644373171;
+    const double eta = 0.3966543747;
+    const double mu = 0.5529291479;
 
     const auto implicit_butcher_table_a = [](int i,int j, const auto Gamma, const auto delta, const auto eta, const auto mu) {
       const double a_imp[4][4] = {{0,0,0,0},
