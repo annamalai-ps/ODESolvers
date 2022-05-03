@@ -957,7 +957,9 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     *const_cast<CCTK_REAL *>(&cctkGH->cctk_time) = old_time + dt/2;
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
-    //+ *const_cast<CCTK_REAL *>(&cctkGH->cctk_time) = old_time + dt / 2;
+    // reset cctk_time and delta time to original
+    *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = dt;
+    *const_cast<CCTK_REAL *>(&cctkGH->cctk_time) = old_time;
 
     //ToDo: Add verbose for each step
 
@@ -1143,6 +1145,10 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var,&ynp1_product));
     
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
+
+    // reset cctk_time and delta time to original
+    *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = dt;
+    *const_cast<CCTK_REAL *>(&cctkGH->cctk_time) = old_time;
     
     //ToDo: Add verbose for each step
 
