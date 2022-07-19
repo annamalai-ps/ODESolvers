@@ -20,6 +20,8 @@
 #include <utility>
 #include <vector>
 
+CCTK_REAL ODESolvers_alpha = 0;
+
 namespace ODESolvers {
 using namespace std;
 
@@ -919,6 +921,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     // k1_hat = f(y0)
     // Step 1 : 
     // beta = y0 + (dt/2)*k1_hat
+    // alpha = dt/2
     // y1 -> get from 'UserSolvedFunction_G(beta)'
     // y1 = (dt/2)*g(y1) - beta
 
@@ -941,7 +944,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
     const auto beta = var.copy();
-    *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = dt/2;
+    ODESolvers_alpha = dt/2;
     CallScheduleGroup(cctkGH, "ODESolvers_ImplicitStep");
     // time 
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
@@ -976,28 +979,28 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     // *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = dt;
     //--------------Stage 1----------------
     // k1_hat = f(y0)
-    // alpha_1 = dt*a(1,1) -> cctk_delta_time
+    // alpha = dt*a(1,1) = dt*Gamma
     // beta_1 = y0 + dt*(a_hat(2,1)*k1_hat)
-    // y1 -> get from 'UserSolvedFunction_G(alpha_1,beta_1)' call
-    // compute g(y1) -> k1 = (y1-beta_1)/alpha_1 )
+    // y1 -> get from 'UserSolvedFunction_G(alpha,beta_1)' call
+    // compute g(y1) -> k1 = (y1-beta_1)/alpha )
     //--------------Stage 2----------------
     // k2_hat = f(y1)
-    // alpha_2 = dt*a(2,2) -> cctk_delta_time
+    // alpha = dt*a(2,2) = dt*Gamma
     // beta_2 = y0 + dt*( a(2,1)*k1 +
     //                    a_hat(3,1)*k1_hat +
     //                    a_hat(3,2)*k2_hat )
-    // y2 -> get from 'UserSolvedFunction_G(alpha_2,beta_2)' call
-    // compute g(y2) -> k2 = (y2-beta_2)/alpha_2 )
+    // y2 -> get from 'UserSolvedFunction_G(alpha,beta_2)' call
+    // compute g(y2) -> k2 = (y2-beta_2)/alpha )
     //--------------Stage 3----------------
     // k3_hat = f(y2)
-    // alpha_3 = dt*a(3,3) -> cctk_delta_time
+    // alpha = dt*a(3,3) = dt*Gamma
     // beta_3 = y0 + dt*( a(3,1)*k1 +
     //                    a(3,2)*k2 +
     //                    a_hat(4,1)*k1_hat +
     //                    a_hat(4,2)*k2_hat +
     //                    a_hat(4,3)*k3_hat )
-    // y3 = -> get from 'UserSolvedFunction_G(alpha_3,beta_3)' call
-    // compute g(y3) -> k3 = (y3-beta_3)/alpha_3 )
+    // y3 = -> get from 'UserSolvedFunction_G(alpha,beta_3)' call
+    // compute g(y3) -> k3 = (y3-beta_3)/alpha )
     //-----Calculate new state vector------
     // k4_hat = f(y3)
     //
@@ -1057,7 +1060,7 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k1_hat = rhs.copy();
 
-    double alpha = dt*implicit_butcher_table_a(1,1,Gamma,delta,eta,mu);
+    ODESolvers_alpha = dt*Gamma;
     statecomp_t beta_product(cctkGH);
     beta_product = var.copy(); // copy dummy data into new state vector since lincomb requires new state vector data shape
     statecomp_t::lincomb(beta_product,0,make_array(explicit_butcher_table_a_hat(2,1,Gamma,delta,eta,mu)),make_array(&k1_hat));
@@ -1066,19 +1069,17 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
 
     auto beta = var.copy();
     
-    *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = alpha;
     CallScheduleGroup(cctkGH, "ODESolvers_ImplicitStep");
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     const auto y1_var = var.copy();
-    //compute g(y1) -> k1:
     statecomp_t k1(cctkGH);
     k1 = var.copy(); // copy dummy data into new state vector
-    statecomp_t::lincomb(k1,0,make_array(1.0/alpha,-1.0/alpha),make_array(&y1_var,&beta));
+    statecomp_t::lincomb(k1,0,make_array(1.0/ ODESolvers_alpha,-1.0/ ODESolvers_alpha),make_array(&y1_var,&beta));
     //-----------------Stage 2---------------------
+
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k2_hat = rhs.copy();
 
-    alpha = dt*implicit_butcher_table_a(2,2,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
     make_array(
       implicit_butcher_table_a(2,1,Gamma,delta,eta,mu),
@@ -1089,19 +1090,19 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
     beta = var.copy();
-    *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = alpha;
+
     CallScheduleGroup(cctkGH, "ODESolvers_ImplicitStep");
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
-    const auto y2_var = var.copy(); 
     //compute g(y2) -> k2:
+    const auto y2_var = var.copy(); 
     statecomp_t k2(cctkGH);
     k2 = var.copy(); // copy dummy data into new state vector
-    statecomp_t::lincomb(k2,0,make_array(1.0/alpha,-1.0/alpha),make_array(&y2_var,&beta));
+    statecomp_t::lincomb(k2,0,make_array(1.0/ ODESolvers_alpha,-1.0/ ODESolvers_alpha),make_array(&y2_var,&beta));
     //-----------------Stage 3---------------------
+
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k3_hat = rhs.copy();
 
-    alpha = dt*implicit_butcher_table_a(3,3,Gamma,delta,eta,mu);
     statecomp_t::lincomb(beta_product,0,
       make_array(
         implicit_butcher_table_a(3,1,Gamma,delta,eta,mu),
@@ -1115,15 +1116,14 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
     beta = var.copy();
-    *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = alpha;
     CallScheduleGroup(cctkGH, "ODESolvers_ImplicitStep");
     CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
     const auto y3_var = var.copy();
-    //compute g(y3) -> k3:
     statecomp_t k3(cctkGH);
     k3 = var.copy(); // copy dummy data into new state vector
-    statecomp_t::lincomb(k3,0,make_array(1.0/alpha,-1.0/alpha),make_array(&y3_var,&beta));
+    statecomp_t::lincomb(k3,0,make_array(1.0/ ODESolvers_alpha,-1.0/ ODESolvers_alpha),make_array(&y3_var,&beta));
     //-----------Calculate new state vector-------------
+
     CallScheduleGroup(cctkGH, "ODESolvers_NonStiffRHS");
     const auto k4_hat = rhs.copy();
     
@@ -1142,7 +1142,6 @@ extern "C" void ODESolvers_Solve(CCTK_ARGUMENTS) {
       make_array(&k1,&k2,&k3,&k1_hat,&k2_hat,&k3_hat,&k4_hat));
     statecomp_t::lincomb(var,0,make_array(1.0,dt),make_array(&y0_var,&ynp1_product));
     
-    CallScheduleGroup(cctkGH, "ODESolvers_PostStep");
 
     // reset cctk_time and delta time to original
     *const_cast<CCTK_REAL *>(&cctkGH->cctk_delta_time) = dt;
