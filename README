@@ -10,6 +10,8 @@ Solve systems of coupled ordinary differential equations
 
 2. Implemented IMEX method - Midpoint(1,2,2) and ARS(3,4,3) described in:
 
+[0] Python code example: https://github.com/annamalai-ps/IMEX/tree/main/IMEX_1D_scalar_wave_evolution
+
 [1] Ascher, Ruuth, Spiteri: "Implicit-Explicit Runge-Kutta Methods for
 Time-Dependent Partial Differential Equations", Appl. Numer. Math 25
 (1997), pages 151-167,
